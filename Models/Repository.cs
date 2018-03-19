@@ -1,0 +1,48 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace WebSocketWebApplication.Models
+{
+    public class Repository : IRepository
+    {
+        private readonly Dictionary<int, RepositoryItem> repository;
+
+        public Repository()
+        {
+            repository = new Dictionary<int, RepositoryItem>();
+
+            Seed();
+        }
+
+        public IEnumerable<RepositoryItem> GetAll()
+        {
+            return repository.Values;
+        }
+
+        public RepositoryItem Get(int id)
+        {
+            return repository[id];
+        }
+
+        public void Add(RepositoryItem item)
+        {
+            repository.Add(repository.Count + 1, item);
+        }
+
+        public void Update(int id, RepositoryItem item)
+        {
+            repository[id] = item;
+        }
+
+        public void Remove(int id)
+        {
+            repository.Remove(id);
+        }
+
+        private void Seed()
+        {
+            Add(new RepositoryItem { Created = new DateTime(2017, 7, 27), Message = "Happy birthday" });
+            Add(new RepositoryItem { Created = DateTime.Now, Message = "Message of the day" });
+        }
+    }
+}

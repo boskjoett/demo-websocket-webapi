@@ -1,48 +1,52 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using WebSocketWebApplication.Models;
 
 namespace WebSocketWebApplication.Controllers
 {
     [Route("api/[controller]")]
     public class ValuesController : Controller
     {
-        int[] values = { 0, 10, 20, 30, 40, 50 };
+        private readonly IRepository repository;
+
+        public ValuesController(IRepository repository)
+        {
+            this.repository = repository;
+        }
 
         // GET api/values
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<RepositoryItem> Get()
         {
-            foreach (int i in values)
-            {
-                yield return i.ToString();
-            }
+            return repository.GetAll();
         }
 
         // GET api/values/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public RepositoryItem Get(int id)
         {
-            return $"Value at index {id} = {values[id]}";
+            return repository.Get(id);
         }
 
         // POST api/values
         [HttpPost]
-        public void Post([FromBody]string value)
+        public void Post(RepositoryItem item)
         {
+            repository.Add(item);
         }
 
         // PUT api/values/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public void Put(int id, RepositoryItem item)
         {
-            values[id] = int.Parse(value);
+            repository.Update(id, item);
         }
 
         // DELETE api/values/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
-            values[id] = -1;
+            repository.Remove(id);
         }
     }
 }
