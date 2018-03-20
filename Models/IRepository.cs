@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace WebSocketWebApplication.Models
 {
     public interface IRepository
     {
+        event EventHandler<RepositoryItem> ItemAdded;
+
         void Add(RepositoryItem item);
         RepositoryItem Get(int id);
         IEnumerable<RepositoryItem> GetAll();

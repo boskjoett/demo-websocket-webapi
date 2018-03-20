@@ -7,6 +7,8 @@ namespace WebSocketWebApplication.Models
     {
         private readonly Dictionary<int, RepositoryItem> repository;
 
+        public event EventHandler<RepositoryItem> ItemAdded;
+
         public Repository()
         {
             repository = new Dictionary<int, RepositoryItem>();
@@ -27,6 +29,8 @@ namespace WebSocketWebApplication.Models
         public void Add(RepositoryItem item)
         {
             repository.Add(repository.Count + 1, item);
+
+            ItemAdded?.Invoke(this, item);
         }
 
         public void Update(int id, RepositoryItem item)

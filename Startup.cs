@@ -19,6 +19,8 @@ namespace WebSocketWebApplication
 
     public class Startup
     {
+        private WebSocket webSocket;
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -41,7 +43,7 @@ namespace WebSocketWebApplication
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddConsole(LogLevel.Debug);
 
@@ -57,8 +59,14 @@ namespace WebSocketWebApplication
             {
                 if (context.WebSockets.IsWebSocketRequest)
                 {
-                    var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                    await Echo(context, webSocket, loggerFactory.CreateLogger("Echo"));
+                    webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                    IRepository repository = serviceProvider.GetService<IRepository>();
+
+                    repository.ItemAdded += OnItemAdded;
+
+                    await Echo(context, webSocket, repository, loggerFactory.CreateLogger("Echo"));
+
+                    repository.ItemAdded -= OnItemAdded;
                 }
                 else
                 {
@@ -80,7 +88,12 @@ namespace WebSocketWebApplication
             app.UseFileServer();
         }
 
-        private async Task Echo(HttpContext context, WebSocket webSocket, ILogger logger)
+        private void OnItemAdded(object sender, RepositoryItem e)
+        {
+
+        }
+
+        private async Task Echo(HttpContext context, WebSocket webSocket, IRepository repository, ILogger logger)
         {
             var buffer = new byte[1024 * 4];
             var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
@@ -93,6 +106,9 @@ namespace WebSocketWebApplication
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
                     content = Encoding.UTF8.GetString(buffer, 0, result.Count);
+
+                    repository.Add(new RepositoryItem { Created = DateTime.Now, Message = content });
+
                     if (content.Equals("ServerClose"))
                     {
                         await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing from Server", CancellationToken.None);
